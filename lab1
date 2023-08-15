@@ -1,0 +1,193 @@
+#PART1
+void setup()
+{
+  // Initiate the serial communication.
+  // Set the speed to 9600 baud (bits per second).
+  // See http://arduino.cc/en/Serial/Begin for more details.
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  // Write a message to the serial port
+  Serial.println("Hello, Group 23!");
+
+  // Pause for 1 second
+  delay(1000);
+}
+
+#PART2
+
+void setup()
+{
+     // Declare Pin 2 (the button) as an input pin
+     pinMode(2, INPUT);
+     // Initiate the serial communication.
+     // Set the speed to 9600 baud (bits per second).
+     // See http://arduino.cc/en/Serial/Begin for more details.
+     Serial.begin(9600);
+}
+
+void loop()
+{
+    int button = digitalRead(2);
+    // Write a message to the serial port
+    if (button == LOW)
+    {
+        Serial.println("<Say something here: button is 0>");
+      	digitalWrite(13, HIGH);
+    }
+    else
+    {
+        Serial.println("<Say something here: button is not 0>");
+      	digitalWrite(13, LOW);
+    }
+
+    // Pause for 1 second
+    delay(1000);
+}
+
+#PART3
+
+boolean ledState = LOW; // Begin Statement of LED
+boolean interruptFired = false; // Interrupt Flag
+
+void setup()
+{
+  pinMode(2, INPUT); // configures pin 2 to read the interrupt signal
+  pinMode(13, OUTPUT); // sets pin 13 as an output for the LED
+  Serial.begin(9600);
+  attachInterrupt(digitalPinToInterrupt(2), changeLED, FALLING); // FALLING: whenever there's a falling edge (from HIGH to LOW), the changeLED() is executed, and then interruptFired = true.
+}
+
+void loop()
+{
+  // Check if the interrupt flag is set
+  if (interruptFired)
+  {
+    // Print a message indicating the interrupt occurred
+    Serial.println("Interrupt fired.");
+
+    // Toggle the LED state
+    ledState = !ledState;
+
+    // Update the LED state
+    digitalWrite(13, ledState);
+
+    // Reset the interrupt flag
+    interruptFired = false;
+  }
+}
+
+void changeLED()
+{
+  interruptFired = true; // is changeLED() called, the Interrupt Flag is true
+}
+
+#PART4
+
+const int ledPins[] = {10, 11, 12, 13};
+const int button1Pin = 2;
+const int button2Pin = 3;
+
+int ledCount = 0;
+bool flashing = false;
+
+void setup()
+{
+  for (int i = 0; i < 4; i++)
+  {
+    pinMode(ledPins[i], OUTPUT);
+    digitalWrite(ledPins[i], LOW); // Turn off all LEDs initially
+  }
+  
+  pinMode(button1Pin, INPUT_PULLUP);
+  pinMode(button2Pin, INPUT_PULLUP);
+}
+
+void loop()
+{
+  // Check Button 1
+  if (digitalRead(button1Pin) == LOW)
+  {
+    delay(50); // Debounce delay
+    if (digitalRead(button1Pin) == LOW)
+    {
+      ledCount++;
+      
+      if (ledCount <= 4)
+      {
+        turnOnLEDs(ledCount);
+      }
+      else if (ledCount >= 5)
+      {
+        flashing = true;
+      }
+    }
+    
+    while (digitalRead(button1Pin) == LOW)
+    {
+      // Wait for button release
+    }
+  }
+  
+  // Check Button 2
+  if (digitalRead(button2Pin) == LOW)
+  {
+    delay(50); // Debounce delay
+    if (digitalRead(button2Pin) == LOW)
+    {
+      resetLEDs();
+    }
+    
+    while (digitalRead(button2Pin) == LOW)
+    {
+      // Wait for button release
+    }
+  }
+  
+  // Handle flashing LEDs
+  if (flashing)
+  {
+    flashLEDs();
+  }
+}
+
+void turnOnLEDs(int count)
+{
+  for (int i = 0; i < count; i++)
+  {
+    digitalWrite(ledPins[i], HIGH);
+  }
+}
+
+void resetLEDs()
+{
+  for (int i = 0; i < 4; i++)
+  {
+    digitalWrite(ledPins[i], LOW);
+  }
+  
+  ledCount = 0;
+  flashing = false;
+}
+
+void flashLEDs()
+{
+  static bool ledState = LOW;
+  static unsigned long previousMillis = 0;
+  const unsigned long interval = 1000; // Flashing interval in milliseconds
+  
+  unsigned long currentMillis = millis();
+  
+  if (currentMillis - previousMillis >= interval)
+  {
+    previousMillis = currentMillis;
+    ledState = !ledState;
+    
+    for (int i = 0; i < 4; i++)
+    {
+      digitalWrite(ledPins[i], ledState);
+    }
+  }
+}
